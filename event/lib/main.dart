@@ -2,8 +2,21 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'newAccount.dart';
 
-void main() => runApp(AllUsers());
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+   Widget build(BuildContext context){
+     return MaterialApp(
+      theme: ThemeData(primaryColor: Colors.redAccent),
+      title: 'Event List',
+      home: AllUsers(),
+     );
+   }
+}
+
 
 class AllUsers extends StatefulWidget {
   @override
@@ -14,6 +27,34 @@ class _AllUsersState extends State<AllUsers> {
   var _isLoading = false;
   var items;
   var tof, name, ps, adress, phone;
+
+  Future<String> _showDialog(String msg) async {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          title: new Text('Info '),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+                new Text(msg),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   _getData() async {
     final url =
         "https://prayingkeralaevent.000webhostapp.com/SelectAllUsers.php";
@@ -30,6 +71,19 @@ class _AllUsersState extends State<AllUsers> {
     }
   }
 
+  void _deletUser(var id) async {
+    var url =
+        "https://prayingkeralaevent.000webhostapp.com/DeleteUser.php";
+
+    var response = await http.post(url, body: {"userid": id});
+    if (response.statusCode == 200) {
+      _showDialog("Deleted");
+    } else {
+      _showDialog("Not Deleted");
+    }
+    //print(_adresseController.text);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -38,22 +92,85 @@ class _AllUsersState extends State<AllUsers> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          title: Text("Event List", style: TextStyle(fontFamily: 'raleway' ,color: Colors.redAccent, fontSize: 25)),
-          backgroundColor: Colors.white,
+    return Scaffold(
+        appBar: PreferredSize(
+          child: Container(
+            child: AppBar(
+              centerTitle: true,
+              elevation: 2,
+              title: Text("Event List",
+                  style: TextStyle(
+                      fontFamily: 'raleway',
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 22)),
+              backgroundColor: Colors.white,
+            ),
+          ),
+          preferredSize: Size.fromHeight(64),
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Register()),
+            );
+          },
           elevation: 5,
           backgroundColor: Colors.redAccent,
-          child: Icon(Icons.add, color: Colors.white, size: 40,),
+          child: FittedBox(
+              child: Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 40,
+          )),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: BottomAppBar(
+          elevation: 10,
+          child: Container(
+              height: 56,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  children: <Widget>[
+                    Container(
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.refresh,
+                          size: 28,
+                        ),
+                        color: Colors.redAccent,
+                        onPressed: () {
+                          setState(() {
+                            _isLoading = false;
+                            _getData();
+                          });
+                        },
+                      ),
+                    ),
+                    Container(
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.more_vert,
+                          size: 28,
+                        ),
+                        color: Colors.redAccent,
+                        onPressed: () {},
+                      ),
+                    ),
+                  ],
+                ),
+              )),
         ),
         body: Center(
             child: !_isLoading
-                ? CircularProgressIndicator(backgroundColor: Colors.red)
+                ? CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
+                  )
                 : ListView.builder(
                     itemCount: this.items != null ? this.items.length : 0,
                     itemBuilder: (context, i) {
@@ -61,21 +178,32 @@ class _AllUsersState extends State<AllUsers> {
                       return Card(
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30)),
-                        elevation: 3,
+                        elevation: 2,
                         margin: EdgeInsets.all(20),
                         child: Container(
                           padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
                           child: ListTile(
-                            title: Text(
-                              item["eventName"],
-                            ),
+                            title: Text(item["eventName"],
+                                style: TextStyle(
+                                    fontFamily: 'raleway',
+                                    color: Colors.redAccent,
+                                    fontWeight: FontWeight.w600)),
                             subtitle: Text(
                               item["eventInfo"],
                               maxLines: 2,
                             ),
                             trailing: IconButton(
-                              icon: Icon(Icons.delete, color: Colors.redAccent,),
-                              onPressed: () {},
+                              icon: Icon(
+                                Icons.delete,
+                                color: Colors.redAccent,
+                              ),
+                              onPressed: () {
+                                _deletUser(item["id"]);
+                                setState(() {
+                                  _isLoading = false;
+                                  _getData();
+                                });
+                              },
                             ),
                             leading: Container(
                               decoration: BoxDecoration(
@@ -94,7 +222,6 @@ class _AllUsersState extends State<AllUsers> {
                       );
                     },
                   )),
-      ),
     );
   }
 }
