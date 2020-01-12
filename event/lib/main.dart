@@ -77,6 +77,9 @@ class _AllUsersState extends State<AllUsers> {
   }
 
   void _deletUser(var id) async {
+    setState(() {
+      _isLoading = false;
+    });
     var url = "https://prayingkeralaevent.000webhostapp.com/DeleteUser.php";
 
     var response = await http.post(url, body: {"id": id});
@@ -85,7 +88,7 @@ class _AllUsersState extends State<AllUsers> {
     } else {
       _showDialog("Not Deleted");
     }
-    //print(_adresseController.text);
+    _getData();
   }
 
   @override
@@ -209,10 +212,6 @@ class _AllUsersState extends State<AllUsers> {
                               ),
                               onPressed: () {
                                 _deletUser(item["id"]);
-                                setState(() {
-                                  _isLoading = false;
-                                  _getData();
-                                });
                               },
                             ),
                             leading: Container(

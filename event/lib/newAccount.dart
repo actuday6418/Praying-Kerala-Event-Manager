@@ -22,7 +22,7 @@ class _NewEventState extends State<NewEvent> {
       content: new SingleChildScrollView(
         child: new ListBody(
           children: <Widget>[
-            new Text('You have created a new Account.'),
+            new Text('You have created a new Event'),
           ],
         ),
       ),
@@ -242,7 +242,7 @@ class _NewEventState extends State<NewEvent> {
                           Padding(padding: EdgeInsets.all(12)),
                           Center(
                             child: Container(
-                              height: 40,
+                              height: 50,
                               width: 200,
                               child: RaisedButton(
                                 elevation: 2,
@@ -250,7 +250,7 @@ class _NewEventState extends State<NewEvent> {
                                 child: Text(
                                   "Submit",
                                   style: TextStyle(
-                                    color: Colors.black,
+                                    color: Colors.white,
                                     fontSize: 20,
                                     fontFamily: 'raleway',
                                     fontWeight: FontWeight.w500,
