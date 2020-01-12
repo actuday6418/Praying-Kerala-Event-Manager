@@ -1,19 +1,98 @@
 import 'package:event/main.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
 
-class NewEvent extends StatefulWidget {
+class Update extends StatefulWidget {
+  final idUser;
+  Update({Key key, this.idUser}) : super(key: key);
   @override
-  _NewEventState createState() => new _NewEventState();
+  _UpdateState createState() => new _UpdateState();
 }
 
-class _NewEventState extends State<NewEvent> {
+class _UpdateState extends State<Update> {
+  var _isLoading = false;
+  var data;
+  var _eventname = "";
+  var _eventinfo = "";
+  var _eventtime = "";
+  int _eventday;
   var _eventnameController = new TextEditingController();
   var _eventinfoController = new TextEditingController();
   TimeOfDay _time = new TimeOfDay.now();
   String eventTime;
   final _formKey = GlobalKey<FormState>();
   String eventDay = '1';
+
+  Future<String> _showDialog(String msg) async {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          title: new Text('Rewind and remember'),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+                new Text(msg),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _editData() async {
+    var url =
+        "https://prayingkeralaevent.000webhostapp.com/ModifyProfile.php";
+
+    var response = await http.post(url, body: {
+      "eventName": _eventnameController.text,
+      "eventInfo": _eventinfoController.text,
+      "eventTime": eventTime,
+      "eventDay": eventDay,
+    });
+    if (response.statusCode == 200) {
+      _showDialog("Updated Successfully");
+    } else {
+      _showDialog("Updated Failer");
+    }
+
+    //onEditedAccount();
+    //print(_adresseController.text);
+  }
+
+  _fetchData() async {
+    final url =
+        "https://prayingkeralaevent.000webhostapp.com/ConsultProfile.php?id=${widget.idUser}";
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final map = json.decode(response.body);
+      final videosMap = map["result"];
+
+      setState(() {
+        _isLoading = true;
+        this.data = videosMap;
+        _eventname = data[0]['eventName'];
+        _eventinfo = data[0]['eventInfo'];
+        _eventtime = data[0]['eventTime'];
+        _eventday = data[0]['eventDay'];
+        print(data);
+      });
+    }
+  }
 
   void onCreatedAccount() {
     var alert = new AlertDialog(
@@ -22,7 +101,7 @@ class _NewEventState extends State<NewEvent> {
       content: new SingleChildScrollView(
         child: new ListBody(
           children: <Widget>[
-            new Text('You have created a new Account.'),
+            new Text('You have created a new Event'),
           ],
         ),
       ),
@@ -30,7 +109,10 @@ class _NewEventState extends State<NewEvent> {
         new FlatButton(
           child: new Text('Ok'),
           onPressed: () {
-            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => AllUsers()),(Route<dynamic> route)=> false);
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => AllUsers()),
+                (Route<dynamic> route) => false);
           },
         ),
       ],
@@ -54,7 +136,6 @@ class _NewEventState extends State<NewEvent> {
 
   void initState() {
     super.initState();
-    eventTime = "${_time.hour}:${_time.minute}";
   }
 
   @override
@@ -96,7 +177,9 @@ class _NewEventState extends State<NewEvent> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          Padding(padding: EdgeInsets.all(6),),
+                          Padding(
+                            padding: EdgeInsets.all(6),
+                          ),
                           TextFormField(
                             decoration: InputDecoration(
                                 labelText: "Event Name",
@@ -181,7 +264,8 @@ class _NewEventState extends State<NewEvent> {
                                             fontWeight: FontWeight.w600,
                                             fontFamily: 'raleway'),
                                       ),
-                                      borderSide: BorderSide(width: 3, color: Colors.redAccent),
+                                      borderSide: BorderSide(
+                                          width: 3, color: Colors.redAccent),
                                       shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.all(
                                               Radius.circular(30))),
@@ -257,7 +341,7 @@ class _NewEventState extends State<NewEvent> {
                                   ),
                                 ),
                                 onPressed: () {
-                                  if(_formKey.currentState.validate()){
+                                  if (_formKey.currentState.validate()) {
                                     _addData();
                                   }
                                 },
